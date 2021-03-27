@@ -4,7 +4,7 @@ end
 
 class User < ActiveRecord::Base
   has_many :ads
-  scope :recent, -> { order("created_at DESC") }
+  scope :recent, -> { order(created_at: :desc) }
 end
 
 class Ad < ActiveRecord::Base
@@ -31,6 +31,8 @@ class PromoMessagesController < ApplicationController
 
     if @message.save && send_message(recipients)
       redirect_to promo_messages_path, notice: "Messages Sent Successfully!"
+    else
+      render 'new', alert: "Something went wrong"
     end
   end
 
