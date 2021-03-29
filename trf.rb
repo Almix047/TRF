@@ -18,13 +18,13 @@ end
 class PromoMessagesController < ApplicationController
   def new
     @message = PromoMessage.new
-    @sample_of_users = SampleOfUsersService.call(params[:date_from], params[:date_to], params[:page])
+    @users = UsersService.call(params[:date_from], params[:date_to], params[:page])
   end
 
   def create
     @message = PromoMessage.new(promo_message_params)
 
-    recipients = @sample_of_users.pluck(:phone)
+    recipients = @users.pluck(:phone)
 
     if @message.save
       SendPromoMessageService.send_message(recipients)
@@ -49,7 +49,7 @@ end
 
 
 # Сервисы
-class SampleOfUsersService
+class UsersService
   def self.call(date_from, date_to, page)
     if valid_date?(date_from) && valid_date?(date_to)
       User.recent.joins(:ads).where('published_ads_count': 1)
@@ -69,7 +69,7 @@ class CsvReportService
   ATTRIBUTES = %w[id phone name].freeze
 
   def call(date_from, date_to, page)
-    users = SampleOfUsersService.call(date_from, date_to, page)
+    users = UsersService.call(date_from, date_to, page)
     send_data to_csv(users), filename: "promotion-users-#{Time.zone.today}.csv"
   end
 
