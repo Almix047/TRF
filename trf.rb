@@ -87,6 +87,6 @@ end
 
 class SendPromoMessageService
   def send_message(recipients)
-    recipients.each { |r| PromoMessagesSendJob.perform_later(r) }
+    recipients.each.slice(1000) { |r| PromoMessagesSendJob.perform_later(r) }
   end
 end
