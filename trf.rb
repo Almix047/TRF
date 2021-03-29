@@ -62,9 +62,9 @@ end
 # Сервисы
 class UsersService
   def self.call(date_from, date_to, page)
-      User.recent.joins(:ads).where('published_ads_count': 1)
-          .where('published_at': date_from..date_to)
-          .page(page)
+      User.joins(:ads)
+          .where('published_ads_count': 1, 'published_at': date_from..date_to)
+          .recent.page(page)
     end
   end
 end
