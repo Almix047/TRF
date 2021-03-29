@@ -18,13 +18,13 @@ end
 class PromoMessagesController < ApplicationController
   def new
     @message = PromoMessage.new
-    @users = UsersService.call(params[:date_from], params[:date_to], params[:page])
+    users
   end
 
   def create
     @message = PromoMessage.new(promo_message_params)
 
-    recipients = @users.pluck(:phone)
+    recipients = @users.select(:phone)
 
     if @message.save
       SendPromoMessageService.send_message(recipients)
@@ -35,10 +35,21 @@ class PromoMessagesController < ApplicationController
   end
 
   def download_csv
-    CsvReportService.new.call(params[:date_from], params[:date_to], params[:page])
+    users
+    send_data CsvReportService.to_csv(users), filename: "promotion-users-#{Time.zone.today}.csv"
   end
 
   private
+
+  def users
+    if valid_date?(params[:date_from]) && valid_date?(params[:date_to])
+      @users = UsersService.call(params[:date_from], params[:date_to], params[:page])
+    end
+  end
+
+  def valid_date?(date)
+    date.present? && (Date.parse(date) rescue nil).is_a?(Date)
+  end
 
   def promo_message_params
     params.permit(:body, :date_from, :date_to)
@@ -51,31 +62,17 @@ end
 # Сервисы
 class UsersService
   def self.call(date_from, date_to, page)
-    if valid_date?(date_from) && valid_date?(date_to)
       User.recent.joins(:ads).where('published_ads_count': 1)
           .where('published_at': date_from..date_to)
           .page(page)
     end
-  end
-
-  private
-
-  def valid_date?(date)
-    date.present? && (Date.parse(date) rescue nil).is_a?(Date)
   end
 end
 
 class CsvReportService
   ATTRIBUTES = %w[id phone name].freeze
 
-  def call(date_from, date_to, page)
-    users = UsersService.call(date_from, date_to, page)
-    send_data to_csv(users), filename: "promotion-users-#{Time.zone.today}.csv"
-  end
-
-  private
-
-  def to_csv(data)
+  def self.to_csv(data)
     CSV.generate(headers: true) do |csv|
       csv << ATTRIBUTES
       data.each do |user|
@@ -86,7 +83,7 @@ class CsvReportService
 end
 
 class SendPromoMessageService
-  def send_message(recipients)
-    recipients.each.slice(1000) { |r| PromoMessagesSendJob.perform_later(r) }
+  def self.send_message(recipients)
+    recipients.find_each { |r| PromoMessagesSendJob.perform_later(r) }
   end
 end
