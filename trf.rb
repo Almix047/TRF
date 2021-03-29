@@ -19,7 +19,6 @@ class PromoMessagesController < ApplicationController
   def new
     @message = PromoMessage.new
     @sample_of_users = SampleOfUsersService.call(params[:date_from], params[:date_to], params[:page])
-    end
   end
 
   def create
@@ -54,8 +53,8 @@ class SampleOfUsersService
   def self.call(date_from, date_to, page)
     if valid_date?(date_from) && valid_date?(date_to)
       User.recent.joins(:ads).where('published_ads_count': 1)
-      .where('published_at': date_from..date_to)
-      .page(page)
+          .where('published_at': date_from..date_to)
+          .page(page)
     end
   end
 
@@ -67,7 +66,7 @@ class SampleOfUsersService
 end
 
 class CsvReportService
-  ATTRIBUTES = %w[id phone name]
+  ATTRIBUTES = %w[id phone name].freeze
 
   def call(date_from, date_to, page)
     users = SampleOfUsersService.call(date_from, date_to, page)
@@ -84,7 +83,6 @@ class CsvReportService
       end
     end
   end
-
 end
 
 class SendPromoMessageService
