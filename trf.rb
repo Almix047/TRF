@@ -69,13 +69,13 @@ class UsersService
 end
 
 class CsvReportService
-  ATTRIBUTES = %w[id phone name].freeze
+  ATTRIBUTES = %i[id phone name].freeze
 
-  def self.to_csv(data)
+  def self.to_csv(users)
     CSV.generate(headers: true) do |csv|
-      csv << ATTRIBUTES
-      data.each do |user|
-        csv << ATTRIBUTES.map { |attr| user.public_send(attr) }
+      csv.add_row(ATTRIBUTES)
+      users.each do |user|
+        csv.add_row(ATTRIBUTES.map { |attr| user.public_send(attr) })
       end
     end
   end
