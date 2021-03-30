@@ -16,18 +16,17 @@ end
 
 # Контроллеры
 class PromoMessagesController < ApplicationController
+  before_action :users, only: [:new, :create]
+
   def new
     @message = PromoMessage.new
-    users
   end
 
   def create
     @message = PromoMessage.new(promo_message_params)
 
-    recipients = @users.select(:phone)
-
     if @message.save
-      SendPromoMessageService.send_message(recipients)
+      SendPromoMessageService.send_message(@users.select(:phone))
       redirect_to promo_messages_path, notice: 'Messages scheduled for sending.'
     else
       render 'new', alert: 'Something went wrong'
