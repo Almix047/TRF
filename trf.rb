@@ -75,7 +75,7 @@ class CsvReportService
     CSV.generate(headers: true) do |csv|
       csv << ATTRIBUTES
       data.each do |user|
-        csv << ATTRIBUTES.map { |attr| user.send(attr) }
+        csv << ATTRIBUTES.map { |attr| user.public_send(attr) }
       end
     end
   end
